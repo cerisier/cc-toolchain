@@ -30,16 +30,16 @@ cc_args(
 
 
 cc_args(
-    name = "builtin_headers_include_paths",
+    name = "posix_headers_include_paths",
     actions = [
         "@rules_cc//cc/toolchains/actions:compile_actions",
     ],
     args = [
         "-isystem",
-        "{builtin_headers_include_path}",
+        "{posix_headers_include_path}",
     ],
     format = {
-        "builtin_headers_include_path": "@zig-srcs//:include",
+        "posix_headers_include_path": "@zig-srcs//:include",
     },
     data = [
         "@zig-srcs//:include",

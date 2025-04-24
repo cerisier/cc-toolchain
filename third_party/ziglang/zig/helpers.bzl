@@ -19,7 +19,7 @@ def glibc_includes(cpu):
         "lib/libc/glibc",
     ]
 
-def libc_headers(arch, as_glob = False):
+def glibc_headers(arch, as_glob = False):
     paths = [
         "lib/libc/include/{arch}-linux-gnu{pattern}".format(arch = arch, pattern = "/**" if as_glob else ""),  # std.zig.target.osArchName
         "lib/libc/include/generic-glibc{pattern}".format(pattern = "/**" if as_glob else ""),

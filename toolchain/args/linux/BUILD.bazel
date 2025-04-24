@@ -52,12 +52,12 @@ cc_args(
         "{libc_headers_include_path2}",
     ],
     format = {
-        "libc_headers_include_path": "@zig-srcs//:libc_headers_arch_specific_directory",
-        "libc_headers_include_path2": "@zig-srcs//:libc_headers_generic_directory",
+        "libc_headers_include_path": "@zig-srcs//:glibc_headers_arch_specific_directory",
+        "libc_headers_include_path2": "@zig-srcs//:glibc_headers_generic_directory",
     },
     data = [
-        "@zig-srcs//:libc_headers_arch_specific_directory",
-        "@zig-srcs//:libc_headers_generic_directory",
+        "@zig-srcs//:glibc_headers_arch_specific_directory",
+        "@zig-srcs//:glibc_headers_generic_directory",
     ],
 )
 
@@ -89,7 +89,7 @@ cc_args(
         "-Wl,--end-group",
     ],
     data = [
-        "@zig-srcs//:Scrt1.static",
+        "@zig-srcs//:glibc_Scrt1.static",
         "@compiler-rt//:builtins.static",
         "@zig-srcs//:libunwind",
         "@zig-srcs//:c++",
@@ -98,7 +98,7 @@ cc_args(
         "//glibc:search_directory",
     ],
     format = {
-        "Scrt1": "@zig-srcs//:Scrt1.static",
+        "Scrt1": "@zig-srcs//:glibc_Scrt1.static",
         "compiler_rt_builtins": "@compiler-rt//:builtins.static",
         "libunwind": "@zig-srcs//:libunwind",
         "libcxx": "@zig-srcs//:c++",

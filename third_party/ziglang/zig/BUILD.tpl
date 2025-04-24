@@ -2,7 +2,7 @@ load("@cc-toolchain//toolchain/stage2:cc_stage2_library.bzl", "cc_stage2_library
 load("@cc-toolchain//toolchain/stage2:cc_stage2_static_library.bzl", "cc_stage2_static_library")
 load("@bazel_skylib//rules/directory:directory.bzl", "directory")
 load("@bazel_skylib//rules/directory:subdirectory.bzl", "subdirectory")
-load("@cc-toolchain//third_party/ziglang/zig:helpers.bzl", "glibc_includes", "libc_headers", "linux_system_headers")
+load("@cc-toolchain//third_party/ziglang/zig:helpers.bzl", "glibc_includes", "glibc_headers", "linux_system_headers")
 
 alias(
     name = "glibc_abilists",
@@ -11,7 +11,7 @@ alias(
 )
 
 cc_stage2_library(
-    name = "init",
+    name = "glibc_init",
     copts = [
         "-nostdinc",
     ],
@@ -21,7 +21,7 @@ cc_stage2_library(
 )
 
 cc_stage2_library(
-    name = "abi_note",
+    name = "glibc_abi_note",
     srcs = [
         "lib/libc/glibc/csu/abi-note.S",
     ],
@@ -43,12 +43,12 @@ cc_stage2_library(
         "@cc-toolchain//platforms/config:linux_x86_64": glibc_includes("x86_64"),
         "@cc-toolchain//platforms/config:linux_aarch64": glibc_includes("aarch64"),
     }),
-    implementation_deps = [":c"],
+    implementation_deps = [":gnu-libc"],
     visibility = ["//visibility:public"],
 )
 
 cc_stage2_library(
-    name = "start",
+    name = "glibc_start",
     srcs = select({
         "@cc-toolchain//platforms/config:linux_x86_64": ["lib/libc/glibc/sysdeps/x86_64/start.S"],
         "@cc-toolchain//platforms/config:linux_aarch64": ["lib/libc/glibc/sysdeps/aarch64/start.S"],
@@ -118,25 +118,25 @@ cc_stage2_library(
     }),
     implementation_deps = [
         ":linux_system_headers",
-        ":c",
+        ":gnu-libc",
     ],
     visibility = ["//visibility:public"],
 )
 
 cc_stage2_library(
-    name = "Scrt1",
-    deps = [":start", ":init", ":abi_note"],
+    name = "glibc_Scrt1",
+    deps = [":glibc_start", ":glibc_init", ":glibc_abi_note"],
     visibility = ["//visibility:public"],
 )
 
 cc_stage2_static_library(
-    name = "Scrt1.static",
-    deps = [":Scrt1"],
+    name = "glibc_Scrt1.static",
+    deps = [":glibc_Scrt1"],
     visibility = ["//visibility:public"],
 )
 
 cc_stage2_library(
-    name = "builtin_headers",
+    name = "posix_headers",
     includes = [
         "lib/include",
     ],
@@ -145,7 +145,7 @@ cc_stage2_library(
 )
 
 directory(
-    name = "builtin_headers_directory",
+    name = "posix_headers_directory",
     srcs = glob([
         "lib/include/**",
     ]),
@@ -155,7 +155,7 @@ directory(
 subdirectory(
     name = "include",
     path = "lib/include",
-    parent = ":builtin_headers_directory",
+    parent = ":posix_headers_directory",
     visibility = ["//visibility:public"],
 )
 
@@ -201,16 +201,16 @@ subdirectory(
 )
 
 cc_stage2_library(
-    name = "c",
+    name = "gnu-libc",
     # order matters
     includes = select({
-        "@cc-toolchain//platforms/config:linux_x86_64": libc_headers("x86_64"),
-        "@cc-toolchain//platforms/config:linux_aarch64": libc_headers("aarch64"),
+        "@cc-toolchain//platforms/config:linux_x86_64": glibc_headers("x86_64"),
+        "@cc-toolchain//platforms/config:linux_aarch64": glibc_headers("aarch64"),
         "@platforms//os:macos": ["lib/libc/include/any-macos-any"],
     }, no_match_error = "Unsupported platform"),
     hdrs = select({
-        "@cc-toolchain//platforms/config:linux_x86_64": libc_headers("x86_64", as_glob = True),
-        "@cc-toolchain//platforms/config:linux_aarch64": libc_headers("aarch64", as_glob = True),
+        "@cc-toolchain//platforms/config:linux_x86_64": glibc_headers("x86_64", as_glob = True),
+        "@cc-toolchain//platforms/config:linux_aarch64": glibc_headers("aarch64", as_glob = True),
         "@platforms//os:macos": glob(["lib/libc/include/any-macos-any/**"]),
     }, no_match_error = "Unsupported platform"),
     implementation_deps = select({
@@ -235,6 +235,7 @@ cc_stage2_library(
 # }
 
 cc_stage2_library(
+    # glibc_c_nonshared
     name = "c_nonshared",
     copts = [
         "-O2", # libc must be compiled with optimizations (should match with above)
@@ -312,8 +313,8 @@ cc_stage2_library(
             ":linux_system_headers",
         ],
     }) + [
-        ":builtin_headers",
-        ":c",
+        ":posix_headers",
+        ":gnu-libc",
     ],
     visibility = ["//visibility:public"],
 )
@@ -337,28 +338,28 @@ filegroup(
 )
 
 directory(
-    name = "libc_headers_directory",
+    name = "glibc_headers_directory",
     srcs = select({
-        "@cc-toolchain//platforms/config:linux_x86_64": libc_headers("x86_64", as_glob = True),
-        "@cc-toolchain//platforms/config:linux_aarch64": libc_headers("aarch64", as_glob = True),
+        "@cc-toolchain//platforms/config:linux_x86_64": glibc_headers("x86_64", as_glob = True),
+        "@cc-toolchain//platforms/config:linux_aarch64": glibc_headers("aarch64", as_glob = True),
     }, no_match_error = "Unsupported platform"),
     visibility = ["//visibility:public"],
 )
 
 subdirectory(
-    name = "libc_headers_arch_specific_directory",
+    name = "glibc_headers_arch_specific_directory",
     path = select({
         "@cc-toolchain//platforms/config:linux_x86_64": "lib/libc/include/x86_64-linux-gnu",
         "@cc-toolchain//platforms/config:linux_aarch64": "lib/libc/include/aarch64-linux-gnu",
     }, no_match_error = "Unsupported platform"),
-    parent = ":libc_headers_directory",
+    parent = ":glibc_headers_directory",
     visibility = ["//visibility:public"],
 )
 
 subdirectory(
-    name = "libc_headers_generic_directory",
+    name = "glibc_headers_generic_directory",
     path = "lib/libc/include/generic-glibc",
-    parent = ":libc_headers_directory",
+    parent = ":glibc_headers_directory",
     visibility = ["//visibility:public"],
 )
 
@@ -449,8 +450,8 @@ cc_stage2_library(
             ":linux_system_headers",
         ],
     }) + [
-        ":builtin_headers",
-        ":c",
+        ":posix_headers",
+        ":gnu-libc",
     ],
     visibility = ["//visibility:public"],
 )
@@ -568,8 +569,8 @@ cc_stage2_library(
             ":linux_system_headers",
         ],
     }) + [
-        ":builtin_headers",
-        ":c",
+        ":posix_headers",
+        ":gnu-libc",
     ],
     visibility = ["//visibility:public"],
 )
@@ -664,8 +665,8 @@ cc_stage2_library(
             ":linux_system_headers",
         ],
     }) + [
-        ":builtin_headers",
-        ":c",
+        ":posix_headers",
+        ":gnu-libc",
     ],
     visibility = ["//visibility:public"],
 )

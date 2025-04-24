@@ -34,7 +34,7 @@ def atomic_helper_cc_library(name, pat, size, model):
         ],
         includes = ["lib/builtins"],
         deps = [
-            "@zig-srcs//:builtin_headers",
+            "@zig-srcs//:posix_headers",
         ],
     )
     return name

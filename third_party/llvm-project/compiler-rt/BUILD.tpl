@@ -358,8 +358,8 @@ cc_stage2_library(
     }),
     implementation_deps = [
         "@zig-srcs//:linux_system_headers",
-        "@zig-srcs//:builtin_headers",
-        "@zig-srcs//:c",
+        "@zig-srcs//:posix_headers",
+        "@zig-srcs//:gnu-libc",
     ],
     visibility = ["//visibility:public"],
 )
