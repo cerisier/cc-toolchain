@@ -1,0 +1,15 @@
+load(":declare_libcs_constraints.bzl", "declare_libcs_constraints")
+
+package(default_visibility = ["//visibility:public"])
+
+constraint_setting(
+    name = "variant",
+    default_constraint_value = "unconstrained",
+)
+
+constraint_value(
+    name = "unconstrained",
+    constraint_setting = "variant",
+)
+
+declare_libcs_constraints()

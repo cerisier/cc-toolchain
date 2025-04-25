@@ -1,8 +1,8 @@
 load("@bazel_skylib//rules:select_file.bzl", "select_file")
 load("@aspect_bazel_lib//lib:run_binary.bzl", "run_binary")
 load("//toolchain:selects.bzl", "platform_extra_binary")
+load(":glibc_stubs_assembly_files.bzl", "glibc_stubs_assembly_files")
 load(":libc_shared_library.bzl", "make_glibc_shared_library")
-load(":rule.bzl", "glibc_stubs_assembly_files")
 
 LIBC_SO_VERSIONS = {
     "ld": "",
