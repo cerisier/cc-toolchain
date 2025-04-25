@@ -1,4 +1,3 @@
-load(":declare_platforms.bzl", "declare_platforms", "declare_platforms_libc_aware")
+load(":declare_platforms.bzl", "declare_platforms")
 
 declare_platforms()
-declare_platforms_libc_aware()

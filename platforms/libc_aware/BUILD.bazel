@@ -1,0 +1,3 @@
+load(":declare_platforms_libc_aware.bzl", "declare_platforms_libc_aware")
+
+declare_platforms_libc_aware()
