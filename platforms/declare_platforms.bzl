@@ -1,22 +1,23 @@
 
-load("//platforms:platforms.bzl", "CPUS", "OS")
+load("//platforms:common.bzl", _arch_aliases = "ARCH_ALIASES", _supported_target = "SUPPORTED_TARGETS")
 
 _def declare_platforms():
-    for bzlcpu, aliascpu in CPUS:
-        for os in OS:
+    for (target_os, target_cpu) in _supported_target:
+        native.platform(
+            name = "{}_{}".format(target_os, target_cpu),
+            constraint_values = [
+                "@platforms//cpu:{}".format(target_cpu),
+                "@platforms//os:{}".format(target_os),
+            ],
+            visibility = ["//visibility:public"],
+        )
+
+        for alias in _arch_aliases.get(target_cpu, []):
             native.platform(
-                name = "{}_{}".format(os, bzlcpu),
+                name = "{}_{}".format(target_os, alias),
                 constraint_values = [
-                    "@platforms//cpu:{}".format(bzlcpu),
-                    "@platforms//os:{}".format(os),
-                ],
-                visibility = ["//visibility:public"],
-            )
-            native.platform(
-                name = "{}_{}".format(os, aliascpu),
-                constraint_values = [
-                    "@platforms//cpu:{}".format(bzlcpu),
-                    "@platforms//os:{}".format(os),
+                    "@platforms//cpu:{}".format(alias),
+                    "@platforms//os:{}".format(target_os),
                 ],
                 visibility = ["//visibility:public"],
             )
