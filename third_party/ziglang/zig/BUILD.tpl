@@ -2,7 +2,7 @@ load("@cc-toolchain//toolchain/stage2:cc_stage2_library.bzl", "cc_stage2_library
 load("@cc-toolchain//toolchain/stage2:cc_stage2_static_library.bzl", "cc_stage2_static_library")
 load("@bazel_skylib//rules/directory:directory.bzl", "directory")
 load("@bazel_skylib//rules/directory:subdirectory.bzl", "subdirectory")
-load("@cc-toolchain//third_party/ziglang/zig:helpers.bzl", "glibc_includes", "glibc_headers", "linux_system_headers")
+load("@cc-toolchain//third_party/ziglang/zig:helpers.bzl", "glibc_includes", "glibc_headers", "musl_libc_headers", "musl_libc_internal_headers", "linux_system_headers")
 
 alias(
     name = "glibc_abilists",
@@ -231,6 +231,14 @@ cc_stage2_library(
 #         .Debug, .ReleaseSafe => return target_util.defaultCompilerRtOptimizeMode(target),
 #         .ReleaseFast => return .ReleaseFast,
 #         .ReleaseSmall => return .ReleaseSmall,
+#     }
+# }
+
+# pub fn defaultCompilerRtOptimizeMode(target: std.Target) std.builtin.OptimizeMode {
+#     if (target.cpu.arch.isWasm() and target.os.tag == .freestanding) {
+#         return .ReleaseSmall;
+#     } else {
+#         return .ReleaseFast;
 #     }
 # }
 
@@ -669,4 +677,87 @@ cc_stage2_library(
         ":gnu-libc",
     ],
     visibility = ["//visibility:public"],
+)
+
+###
+### MUSL
+###
+
+load("@cc-toolchain//third_party/ziglang/zig:libc_musl_srcs_filegroup.bzl", "libc_musl_srcs_filegroup")
+
+filegroup(
+    name = "musl_compile_srcs",
+    srcs = glob([
+        "lib/libc/musl/src/**/*.c",
+        "lib/libc/musl/src/**/*.S",
+        "lib/libc/musl/src/**/*.s",
+    ]),
+)
+
+libc_musl_srcs_filegroup(
+    name = "musl_arch_compile_srcs",
+    srcs = [":musl_compile_srcs"],
+    arch = select({
+        "@cc-toolchain//platforms/config:linux_x86_64": "x86_64",
+        "@cc-toolchain//platforms/config:linux_aarch64": "aarch64",
+    }, no_match_error = "Unsupported platform"),
+    visibility = ["//visibility:public"],
+)
+
+cc_stage2_library(
+    name = "musl_internal_headers",
+    includes = select({
+        "@cc-toolchain//platforms/config:linux_x86_64": musl_libc_internal_headers("x86_64"),
+        "@cc-toolchain//platforms/config:linux_aarch64": musl_libc_internal_headers("aarch64"),
+    }, no_match_error = "Unsupported platform"),
+    hdrs = select({
+        "@cc-toolchain//platforms/config:linux_x86_64": musl_libc_internal_headers("x86_64", as_glob = True),
+        "@cc-toolchain//platforms/config:linux_aarch64": musl_libc_internal_headers("aarch64", as_glob = True),
+    }, no_match_error = "Unsupported platform"),
+    textual_hdrs = glob([
+        "lib/libc/musl/ldso/**",
+    ]),
+    visibility = ["//visibility:public"],
+)
+
+COMMON_C_FLAGS = [
+    "-std=c99",
+    "-ffreestanding",
+    "-fexcess-precision=standard",
+    "-frounding-math",
+    "-ffp-contract=off",
+    "-fno-strict-aliasing",
+    "-Wa,--noexecstack",
+    "-D_XOPEN_SOURCE=700",
+    "-Qunused-arguments",
+    "-w",
+]
+
+#TODO: target_compatible_with
+cc_stage2_library(
+    name = "musl_libc_headers",
+    includes = select({
+        "@cc-toolchain//platforms/config:linux_x86_64": musl_libc_headers("x86_64"),
+        "@cc-toolchain//platforms/config:linux_aarch64": musl_libc_headers("aarch64"),
+    }, no_match_error = "Unsupported platform"),
+    hdrs = select({
+        "@cc-toolchain//platforms/config:linux_x86_64": musl_libc_headers("x86_64", as_glob = True),
+        "@cc-toolchain//platforms/config:linux_aarch64": musl_libc_headers("aarch64", as_glob = True),
+    }, no_match_error = "Unsupported platform"),
+    visibility = ["//visibility:public"],
+)
+
+cc_stage2_library(
+    name = "libc-musl",
+    copts = COMMON_C_FLAGS + ["-nostdlib", "-nostdinc"],
+    srcs = [":musl_arch_compile_srcs"] + glob([
+        "lib/libc/musl/src/**/*.h",
+    ]),
+    # passing all files as textual_hdrs since arch specific .c can #include
+    # their generic .c counterpart.
+    textual_hdrs = [":musl_compile_srcs"],
+    implementation_deps = [
+        ":musl_internal_headers",
+        ":musl_libc_headers",
+    ],
 )

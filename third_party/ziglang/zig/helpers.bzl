@@ -19,6 +19,24 @@ def glibc_includes(cpu):
         "lib/libc/glibc",
     ]
 
+def musl_libc_internal_headers(arch, as_glob = False):
+    paths = [
+        "lib/libc/musl/arch/{arch}{pattern}".format(arch = arch, pattern = "/**" if as_glob else ""),
+        "lib/libc/musl/arch/generic{pattern}".format(pattern = "/**" if as_glob else ""),
+        "lib/libc/musl/src/include{pattern}".format(pattern = "/**" if as_glob else ""),
+        "lib/libc/musl/src/internal{pattern}".format(pattern = "/**" if as_glob else ""),
+        "lib/libc/musl/ldso{pattern}".format(pattern = "/**" if as_glob else ""),
+        "lib/libc/musl/include{pattern}".format(pattern = "/**" if as_glob else ""),
+    ]
+    return native.glob(paths) if as_glob else paths
+
+def musl_libc_headers(arch, as_glob = False):
+    paths = [
+        "lib/libc/include/{arch}-linux-musl{pattern}".format(arch = arch, pattern = "/**" if as_glob else ""),  # std.zig.target.osArchName
+        "lib/libc/include/generic-musl{pattern}".format(pattern = "/**" if as_glob else ""),
+    ]
+    return native.glob(paths) if as_glob else paths
+
 def glibc_headers(arch, as_glob = False):
     paths = [
         "lib/libc/include/{arch}-linux-gnu{pattern}".format(arch = arch, pattern = "/**" if as_glob else ""),  # std.zig.target.osArchName
