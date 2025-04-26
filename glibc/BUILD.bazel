@@ -2,6 +2,7 @@ load("@bazel_skylib//rules:select_file.bzl", "select_file")
 load("@aspect_bazel_lib//lib:run_binary.bzl", "run_binary")
 load("//toolchain:selects.bzl", "platform_extra_binary")
 load(":glibc_stubs_assembly_files.bzl", "glibc_stubs_assembly_files")
+load(":libc_aware_target_triple.bzl", "libc_aware_target_triple")
 load(":libc_shared_library.bzl", "make_glibc_shared_library")
 
 LIBC_SO_VERSIONS = {
@@ -23,10 +24,7 @@ alias(
 # Generate assembly files for the glibc (one per lib)
 glibc_stubs_assembly_files(
     name = "generate_glibc_stubs",
-    target = select({
-        "//platforms/config:linux_x86_64": "x86_64-linux-gnu",
-        "//platforms/config:linux_aarch64": "aarch64-linux-gnu",
-    }),
+    target = libc_aware_target_triple(),
     abilist = "@zig-srcs//:glibc_abilists",
     visibility = ["//visibility:public"],
 )

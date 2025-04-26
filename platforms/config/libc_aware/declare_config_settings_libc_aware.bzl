@@ -1,15 +1,10 @@
 load("//constraints/libc:libc_versions.bzl", "LIBCS")
 load("@bazel_skylib//lib:selects.bzl", "selects")
-
-_CPUS = (("x86_64", "amd64"), ("aarch64", "arm64"))
-
-_LIBC_OS = [
-    "linux",
-]
+load("//platforms:platforms.bzl", "CPUS", "LIBC_OS")
 
 def declare_config_settings_libc_aware():
-    for bzlcpu, aliascpu in _CPUS:
-        for os in _LIBC_OS:
+    for bzlcpu, _ in CPUS:
+        for os in LIBC_OS:
             # We need a specific unconstrained group to be avoid multiple match with non libc aware configs
             # Like when selecting against a specific libc version and needing a value for the unconstrained libc
             selects.config_setting_group(
@@ -30,7 +25,3 @@ def declare_config_settings_libc_aware():
                         "//constraints/libc:{}".format(libc),
                     ],
                 )
-
-    
-
-    

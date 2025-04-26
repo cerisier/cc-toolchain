@@ -21,16 +21,5 @@ GLIBC_VERSIONS = [
     2.38,
 ]
 
-# Starting from 2.34, libc embeds pthread, dl, rt, and util.
-# This group helps generates proper config_settings to avoid linking against non existant libraries.
-GLIBCS = {
-    "<2.34": [
-        "gnu.{}".format(glibc) for glibc in GLIBC_VERSIONS if glibc < 2.34
-    ],
-    ">=2.34": [
-        "gnu.{}".format(glibc) for glibc in GLIBC_VERSIONS if glibc >= 2.34
-    ],
-}
-
 LIBCS = ["musl"] + ["gnu.{}".format(glibc) for glibc in GLIBC_VERSIONS]
 

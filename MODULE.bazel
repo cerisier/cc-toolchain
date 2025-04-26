@@ -19,14 +19,10 @@ http_archive(
 )
 http_archive(
     name = "static-extras-toolchain-artifacts-darwin-arm64",
-    urls = ["https://github.com/cerisier/static-toolchains-artifacts/releases/download/0.0.1/static-extras-toolchain-artifacts-darwin-arm64.tar.zst"],
-    sha256 = "c5a950972b519474636baac104a4f4103127f3ee3f797a4267b0fafcef765214",
+    urls = ["https://github.com/cerisier/static-toolchains-artifacts/releases/download/0.0.2/static-extras-toolchain-artifacts-darwin-arm64.tar.zst"],
+    sha256 = "32b832ea8b3f72707460068b2703c4672ce17bbc21d549bba2eee25acdaf1420",
     build_file = "//bootstrap/extras:BUILD.extras.tpl",
 )
-# local_path_override(
-#     module_name = "static-toolchain-artifacts-darwin-arm64",
-#     path = "static-toolchain-artifacts-darwin-arm64",
-# )
 
 http_archive(
     name = "static-toolchain-artifacts-linux-arm64",
@@ -36,14 +32,10 @@ http_archive(
 )
 http_archive(
     name = "static-extras-toolchain-artifacts-linux-arm64",
-    urls = ["https://github.com/cerisier/static-toolchains-artifacts/releases/download/0.0.1/static-extras-toolchain-artifacts-linux-arm64-musl.tar.zst"],
-    sha256 = "f5b21df60c5dd058eab5991f9aff0b131d4503a1d149a08bdce3e9b322023b05",
+    urls = ["https://github.com/cerisier/static-toolchains-artifacts/releases/download/0.0.2/static-extras-toolchain-artifacts-linux-arm64-musl.tar.zst"],
+    sha256 = "42acf797d6929b22e6e62de8924b1fc1478c320d24a28db82fd38fd0cf0c12fe",
     build_file = "//bootstrap/extras:BUILD.extras.tpl",
 )
-# local_path_override(
-#     module_name = "static-toolchain-artifacts-linux-arm64",
-#     path = "static-toolchain-artifacts-linux-arm64",
-# )   
 
 http_archive(
     name = "static-toolchain-artifacts-linux-x86_64",
@@ -53,14 +45,10 @@ http_archive(
 )
 http_archive(
     name = "static-extras-toolchain-artifacts-linux-x86_64",
-    urls = ["https://github.com/cerisier/static-toolchains-artifacts/releases/download/0.0.1/static-extras-toolchain-artifacts-linux-x86_64-musl.tar.zst"],
-    sha256 = "098ae87e597259aad700a3bc1bf3a6f597a2a64ffc7be376859c1ebbaa885fa6",
+    urls = ["https://github.com/cerisier/static-toolchains-artifacts/releases/download/0.0.2/static-extras-toolchain-artifacts-linux-amd64-musl.tar.zst"],
+    sha256 = "813a43c93101e6bbd3b9e7620f6445d03034e774523b00752934fb87b42a2796",
     build_file = "//bootstrap/extras:BUILD.extras.tpl",
 )
-# local_path_override(
-#     module_name = "static-toolchain-artifacts-linux-x86_64",
-#     path = "static-toolchain-artifacts-linux-x86_64",
-# )
 
 http_archive(
     name = "zig-srcs",
@@ -106,19 +94,15 @@ archive_override(
     strip_prefix = "hermetic_cc_toolchain-{}".format(HERMETIC_CC_TOOLCHAIN_COMMIT),
 )
 
-GLIBC_STUBS_GENERATOR_COMMIT = "8e02eb59503781f352ef6b9caf980da96e9a36c3"
+GLIBC_STUBS_GENERATOR_COMMIT = "728bf4e3627adda4b3eb61eadc474361d15e2b95" # v2.0.1
 
-bazel_dep(name = "glibc-stubs-generator", version = "0.0.1", dev_dependency = True)
+bazel_dep(name = "glibc-stubs-generator", version = "2.0.1", dev_dependency = True)
 archive_override(
     module_name = "glibc-stubs-generator",
     urls = ["https://github.com/cerisier/glibc-stubs-generator/archive/{}.tar.gz".format(GLIBC_STUBS_GENERATOR_COMMIT)],
-    integrity = "sha256-TYyydxwJBbo4TSGQdVxfGNWEowLSBvoNWSfb4lQT7Kg=",
+    integrity = "sha256-dUYykzd0ysovNypfEJVj15YgBYmJg9secZ+Klwh5PP4=",
     strip_prefix = "glibc-stubs-generator-{}".format(GLIBC_STUBS_GENERATOR_COMMIT),
 )
-# local_path_override(
-#     module_name = "glibc-stubs-generator",
-#     path = "../glibc-stubs-generator",
-# )
 
 toolchains = use_extension("@hermetic_cc_toolchain//toolchain:ext.bzl", "toolchains", dev_dependency = True)
 use_repo(toolchains, "zig_sdk")

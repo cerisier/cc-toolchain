@@ -1,14 +1,9 @@
 load("@bazel_skylib//lib:selects.bzl", "selects")
-
-_CPUS = (("x86_64", "amd64"), ("aarch64", "arm64"))
-_OS = [
-    "linux",
-    "macos",
-]
+load("//platforms:platforms.bzl", "CPUS", "OS")
 
 def declare_config_settings():
-    for bzlcpu, _ in _CPUS:
-        for os in _OS:
+    for bzlcpu, _ in CPUS:
+        for os in OS:
             selects.config_setting_group(
                 name = "{}_{}".format(os, bzlcpu),
                 match_all = [

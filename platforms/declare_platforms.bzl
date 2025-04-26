@@ -1,12 +1,9 @@
-_CPUS = (("x86_64", "amd64"), ("aarch64", "arm64"))
-_OS = [
-    "linux",
-    "macos",
-]
 
-def declare_platforms():
-    for bzlcpu, aliascpu in _CPUS:
-        for os in _OS:
+load("//platforms:platforms.bzl", "CPUS", "OS")
+
+_def declare_platforms():
+    for bzlcpu, aliascpu in CPUS:
+        for os in OS:
             native.platform(
                 name = "{}_{}".format(os, bzlcpu),
                 constraint_values = [

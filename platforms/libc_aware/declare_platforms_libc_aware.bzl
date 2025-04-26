@@ -1,14 +1,9 @@
 load("//constraints/libc:libc_versions.bzl", "LIBCS")
-
-_CPUS = (("x86_64", "amd64"), ("aarch64", "arm64"))
-
-_LIBC_OS = [
-    "linux",
-]
+load("//platforms:platforms.bzl", "CPUS", "LIBC_OS")
 
 def declare_platforms_libc_aware():
-    for bzlcpu, aliascpu in _CPUS:
-        for os in _LIBC_OS:
+    for bzlcpu, aliascpu in CPUS:
+        for os in LIBC_OS:
             for libc in LIBCS:
                 native.platform(
                     name = "{}_{}_{}".format(os, bzlcpu, libc),
