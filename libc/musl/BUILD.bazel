@@ -1,0 +1,51 @@
+# load("@aspect_bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@aspect_bazel_lib//lib:copy_file.bzl", "copy_file")
+load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
+# sh_binary(
+#     name = "create_musl_libc_search_directory",
+#     srcs = ["copy_musl_libc.sh"],
+# )
+
+# Create a directory that will act as a search path for the libraries
+# run_binary(
+#     name = "musl_libc_search_directory",
+#     tool = ":create_musl_libc_search_directory",
+#     srcs = [
+#         "@zig-srcs//:libc-musl",
+#     ],
+#     args = ["$(location @zig-srcs//:libc-musl)"],
+#     env = {
+#         "OUTPUT_DIR": "$(RULEDIR)/libs",
+#     }, 
+#     out_dirs = ["libs"],
+#     visibility = ["//visibility:public"],
+# )
+
+copy_file(
+    name = "musl_libc",
+    src = "@zig-srcs//:musl_libc.static",
+    out = "libc.a",
+    allow_symlink = True,
+    visibility = ["//visibility:public"],
+)
+
+copy_to_directory(
+    name = "search_directory",
+    srcs = [
+        ":musl_libc",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# Some invocations have -lc copts so we need to support those in a hermetic
+# context. I had the choice between creating a directory layout or making a
+# compiler wrapper that would ignore specific -l flags.
+#
+# > I chose the layout because it will also serve the purpose of generating
+# > sysroots for those who want this instead.
+# alias(
+#     name = "search_directory",
+#     actual = ":musl_libc_search_directory",
+#     visibility = ["//visibility:public"],
+# )
+

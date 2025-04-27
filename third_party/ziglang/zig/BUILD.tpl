@@ -377,7 +377,9 @@ COMMON_CXX_DEFINES = [
     "_LIBCPP_HAS_THREADS", # HANDLE NO THREADS
     "_LIBCPP_HAS_MONOTONIC_CLOCK",
     "_LIBCPP_HAS_TERMINAL",
-    "_LIBCPP_HAS_NOMUSL_LIBC", # HANDLE MUSL
+    # "_LIBCPP_HAS_NOMUSL_LIBC", # HANDLE MUSL
+    "_LIBCPP_HAS_MUSL_LIBC", # HANDLE MUSL
+    "_LIBCXX_HAS_MUSL_LIBC", # HANDLE MUSL
     "_LIBCXXABI_DISABLE_VISIBILITY_ANNOTATIONS",
     "_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS",
     "_LIBCPP_HAS_NO_VENDOR_AVAILABILITY_ANNOTATIONS",
@@ -459,7 +461,7 @@ cc_stage2_library(
         ],
     }) + [
         ":posix_headers",
-        ":gnu-libc",
+        ":musl_libc_headers",
     ],
     visibility = ["//visibility:public"],
 )
@@ -578,7 +580,7 @@ cc_stage2_library(
         ],
     }) + [
         ":posix_headers",
-        ":gnu-libc",
+        ":musl_libc_headers",
     ],
     visibility = ["//visibility:public"],
 )
@@ -674,7 +676,7 @@ cc_stage2_library(
         ],
     }) + [
         ":posix_headers",
-        ":gnu-libc",
+        ":musl_libc_headers",
     ],
     visibility = ["//visibility:public"],
 )
@@ -747,8 +749,34 @@ cc_stage2_library(
     visibility = ["//visibility:public"],
 )
 
+directory(
+    name = "musl_libc_headers_directory",
+    srcs = select({
+        "@cc-toolchain//platforms/config:linux_x86_64": musl_libc_headers("x86_64", as_glob = True),
+        "@cc-toolchain//platforms/config:linux_aarch64": musl_libc_headers("aarch64", as_glob = True),
+    }, no_match_error = "Unsupported platform"),
+    visibility = ["//visibility:public"],
+)
+
+subdirectory(
+    name = "musl_libc_headers_arch_specific_directory",
+    path = select({
+        "@cc-toolchain//platforms/config:linux_x86_64": "lib/libc/include/x86_64-linux-musl",
+        "@cc-toolchain//platforms/config:linux_aarch64": "lib/libc/include/aarch64-linux-musl",
+    }, no_match_error = "Unsupported platform"),
+    parent = ":musl_libc_headers_directory",
+    visibility = ["//visibility:public"],
+)
+
+subdirectory(
+    name = "musl_libc_headers_generic_directory",
+    path = "lib/libc/include/generic-musl",
+    parent = ":musl_libc_headers_directory",
+    visibility = ["//visibility:public"],
+)
+
 cc_stage2_library(
-    name = "libc-musl",
+    name = "musl_libc",
     copts = COMMON_C_FLAGS + ["-nostdlib", "-nostdinc"],
     srcs = [":musl_arch_compile_srcs"] + glob([
         "lib/libc/musl/src/**/*.h",
@@ -760,4 +788,44 @@ cc_stage2_library(
         ":musl_internal_headers",
         ":musl_libc_headers",
     ],
+    visibility = ["//visibility:public"],
+)
+
+cc_stage2_static_library(
+    name = "musl_libc.static",
+    deps = [":musl_libc"],
+    visibility = ["//visibility:public"],
+)
+
+cc_stage2_library(
+    name = "musl_crt1",
+    srcs = ["lib/libc/musl/crt/crt1.c"],
+    implementation_deps = [
+        ":musl_internal_headers",
+        ":musl_libc_headers",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_stage2_library(
+    name = "musl_rcrt1",
+    srcs = ["lib/libc/musl/crt/rcrt1.c"],
+    implementation_deps = [
+        ":musl_internal_headers",
+        ":musl_libc_headers",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_stage2_library(
+    name = "musl_Scrt1",
+    srcs = ["lib/libc/musl/crt/Scrt1.c"],
+    textual_hdrs = [
+        "lib/libc/musl/crt/crt1.c",
+    ],
+    implementation_deps = [
+        ":musl_internal_headers",
+        ":musl_libc_headers",
+    ],
+    visibility = ["//visibility:public"],
 )
