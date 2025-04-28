@@ -25,9 +25,25 @@ def declare_config_settings_libc_aware():
                 ],
             )
 
+        selects.config_setting_group(
+            name = "{}_{}_gnu".format(target_os, target_cpu),
+            match_all = [
+                "@platforms//cpu:{}".format(target_cpu),
+                "@platforms//os:{}".format(target_os),
+                ":gnu",
+            ],
+        )
+
     selects.config_setting_group(
         name = "gnu",
         match_any = [
             "//constraints/libc:{}".format(libc) for libc in _glibc_versions
+        ],
+    )
+
+    selects.config_setting_group(
+        name = "musl",
+        match_any = [
+            "//constraints/libc:musl",
         ],
     )

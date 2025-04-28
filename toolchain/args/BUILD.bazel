@@ -22,9 +22,13 @@ cc_args(
     args = [
         "-target",
     ] + select({
-        #TODO: Selec the right platform for gnu or musl
-        "//platforms/config:linux_x86_64": ["x86_64-linux-musl"],
-        "//platforms/config:linux_aarch64": ["aarch64-linux-musl"],
+        #TODO: Generate this automatically
+        "//platforms/config/libc_aware:linux_x86_64": ["x86_64-linux-gnu"],
+        "//platforms/config/libc_aware:linux_aarch64": ["aarch64-linux-gnu"],
+        "//platforms/config/libc_aware:linux_x86_64_gnu": ["x86_64-linux-gnu"],
+        "//platforms/config/libc_aware:linux_aarch64_gnu": ["aarch64-linux-gnu"],
+        "//platforms/config/libc_aware:linux_x86_64_musl": ["x86_64-linux-musl"],
+        "//platforms/config/libc_aware:linux_aarch64_musl": ["aarch64-linux-musl"],
         "//platforms/config:macos_aarch64": ["aarch64-apple-darwin"],
     }, no_match_error = "Unsupported platform"),
 )

@@ -196,3 +196,13 @@ cc_args(
         "libc_library_search_path": "//libc/musl:search_directory",
     },
 )
+
+alias(
+    name = "linux_default_libs",
+    actual = select({
+        "//constraints/libc:musl": ":linux_default_libs_musl",
+        "//platforms/config/libc_aware:gnu": ":linux_default_libs_gnu",
+        #TODO: Remove once we have set the default glibc for a given target
+        "//constraints/libc:unconstrained": ":linux_default_libs_gnu",
+    }),
+)
