@@ -21,5 +21,7 @@ GLIBC_VERSIONS = [
     2.38,
 ]
 
-LIBCS = ["musl"] + ["gnu.{}".format(glibc) for glibc in GLIBC_VERSIONS]
+GLIBCS = ["gnu.{}".format(glibc) for glibc in GLIBC_VERSIONS]
+
+LIBCS = ["musl"] + GLIBCS
 

@@ -59,6 +59,14 @@ http_archive(
 )
 
 http_archive(
+    name = "musl_libc",
+    urls = ["https://musl.libc.org/releases/musl-1.2.5.tar.gz"],
+    strip_prefix = "musl-1.2.5",
+    integrity = "sha256-qaEYu+hNh2TaDqDSizqz+uhHf8fkCF2QECuFlvx8deQ=",
+    build_file = "//third_party/libc/musl:BUILD.tpl",
+)
+
+http_archive(
     name = "compiler-rt",
     urls = ["https://github.com/llvm/llvm-project/releases/download/llvmorg-20.1.1/compiler-rt-20.1.1.src.tar.xz"],
     strip_prefix = "compiler-rt-20.1.1.src",

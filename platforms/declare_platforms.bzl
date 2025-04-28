@@ -16,7 +16,7 @@ def declare_platforms():
             native.platform(
                 name = "{}_{}".format(target_os, alias),
                 constraint_values = [
-                    "@platforms//cpu:{}".format(alias),
+                    "@platforms//cpu:{}".format(target_cpu),
                     "@platforms//os:{}".format(target_os),
                 ],
                 visibility = ["//visibility:public"],

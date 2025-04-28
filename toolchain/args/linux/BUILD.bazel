@@ -62,7 +62,7 @@ cc_args(
 )
 
 cc_args(
-    name = "linux_default_libs2",
+    name = "linux_default_libs_gnu",
     actions = [
         "@rules_cc//cc/toolchains/actions:link_actions",
     ],
@@ -70,6 +70,20 @@ cc_args(
         "-L.", # needed to -l:bazel-out/...
         "-l:{Scrt1}",
         "-l:{compiler_rt_builtins}",
+
+        # return switch (target.os.tag) {
+        #     .macos,
+        #     .ios,
+        #     .watchos,
+        #     .tvos,
+        #     .visionos,
+        #     .freestanding,
+        #     .wasi, // Wasm/WASI currently doesn't offer support for libunwind, so don't link it.
+        #     => false,
+
+        #     .windows => target.abi.isGnu(),
+        #     else => true,
+        # };
         "-l:{libunwind}",
         "-l:{libcxx}",
         "-l:{libcxxabi}",
@@ -124,25 +138,22 @@ cc_args(
         "-DNO_BOOTSTRAP",
         "-isystem",
         "{libc_headers_include_path}",
-        "-isystem",
-        "{libc_headers_include_path2}",
     ],
     format = {
-        "libc_headers_include_path": "@zig-srcs//:musl_libc_headers_arch_specific_directory",
-        "libc_headers_include_path2": "@zig-srcs//:musl_libc_headers_generic_directory",
+        "libc_headers_include_path": "@musl_libc//:headers_aarch64_include_directory",
     },
     data = [
-        "@zig-srcs//:musl_libc_headers_arch_specific_directory",
-        "@zig-srcs//:musl_libc_headers_generic_directory",
+        "@musl_libc//:headers_aarch64_include_directory",
     ],
 )
 
 cc_args(
-    name = "linux_default_libs",
+    name = "linux_default_libs_musl",
     actions = [
         "@rules_cc//cc/toolchains/actions:link_actions",
     ],
     args = [
+        #TODO: Handle dynamic musl
         "-static",
         "-L.", # needed to -l:bazel-out/...
         "-l:{Scrt1}",
@@ -150,7 +161,6 @@ cc_args(
         "-l:{libunwind}",
         "-l:{libcxx}",
         "-l:{libcxxabi}",
-        # "-l:{libc_nonshared}",
         # We need to support copts like -lc -ldl etc... 
         "-L{libc_library_search_path}",
 
@@ -170,21 +180,19 @@ cc_args(
         # "-Wl,--end-group",
     ],
     data = [
-        "@zig-srcs//:musl_Scrt1",
+        "//libc/musl:musl_Scrt1",
         "@compiler-rt//:builtins.static",
         "@zig-srcs//:libunwind",
         "@zig-srcs//:c++",
         "@zig-srcs//:c++abi",
-        # "@zig-srcs//:c_nonshared",
         "//libc/musl:search_directory",
     ],
     format = {
-        "Scrt1": "@zig-srcs//:musl_Scrt1",
+        "Scrt1": "//libc/musl:musl_Scrt1",
         "compiler_rt_builtins": "@compiler-rt//:builtins.static",
         "libunwind": "@zig-srcs//:libunwind",
         "libcxx": "@zig-srcs//:c++",
         "libcxxabi": "@zig-srcs//:c++abi",
-        # "libc_nonshared": "@zig-srcs//:c_nonshared",
         "libc_library_search_path": "//libc/musl:search_directory",
     },
 )

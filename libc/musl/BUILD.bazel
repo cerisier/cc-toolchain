@@ -1,6 +1,90 @@
 # load("@aspect_bazel_lib//lib:run_binary.bzl", "run_binary")
 load("@aspect_bazel_lib//lib:copy_file.bzl", "copy_file")
 load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
+load("@cc-toolchain//toolchain/stage2:cc_stage2_library.bzl", "cc_stage2_library")
+load("@cc-toolchain//toolchain/stage2:cc_stage2_static_library.bzl", "cc_stage2_static_library")
+load(":libc_musl_srcs_filegroup.bzl", "libc_musl_srcs_filegroup")
+
+libc_musl_srcs_filegroup(
+    name = "musl_arch_compile_srcs",
+    srcs = ["@musl_libc//:compile_srcs"],
+    arch = select({
+        "@cc-toolchain//platforms/config:linux_x86_64": "x86_64",
+        "@cc-toolchain//platforms/config:linux_aarch64": "aarch64",
+    }, no_match_error = "Unsupported platform"),
+    visibility = ["//visibility:public"],
+)
+
+COMMON_C_FLAGS = [
+    "-std=c99",
+    "-ffreestanding",
+    "-fexcess-precision=standard",
+    "-frounding-math",
+    "-ffp-contract=off",
+    "-fno-strict-aliasing",
+    "-Wa,--noexecstack",
+    "-D_XOPEN_SOURCE=700",
+    "-Qunused-arguments",
+    "-w",
+]
+
+cc_stage2_library(
+    name = "musl_libc",
+    copts = COMMON_C_FLAGS + ["-nostdlib", "-nostdinc"],
+    srcs = [
+        ":musl_arch_compile_srcs",
+        "@musl_libc//:compile_hdrs",
+    ],
+    # passing all files as textual_hdrs since arch specific .c can #include
+    # their generic .c counterpart.
+    textual_hdrs = ["@musl_libc//:compile_srcs"],
+    implementation_deps = [
+        "@musl_libc//:musl_internal_headers",
+        "@musl_libc//:musl_libc_headers",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_stage2_static_library(
+    name = "musl_libc.static",
+    deps = [":musl_libc"],
+    visibility = ["//visibility:public"],
+)
+
+cc_stage2_library(
+    name = "musl_crt1",
+    srcs = ["@musl_libc//:crt/crt1.c"],
+    implementation_deps = [
+        "@musl_libc//:musl_internal_headers",
+        "@musl_libc//:musl_libc_headers",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_stage2_library(
+    name = "musl_rcrt1",
+    srcs = ["@musl_libc//:crt/rcrt1.c"],
+    implementation_deps = [
+        "@musl_libc//:musl_internal_headers",
+        "@musl_libc//:musl_libc_headers",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_stage2_library(
+    name = "musl_Scrt1",
+    srcs = ["@musl_libc//:crt/Scrt1.c"],
+    textual_hdrs = [
+        "@musl_libc//:crt/crt1.c",
+    ],
+    implementation_deps = [
+        "@musl_libc//:musl_internal_headers",
+        "@musl_libc//:musl_libc_headers",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+
 # sh_binary(
 #     name = "create_musl_libc_search_directory",
 #     srcs = ["copy_musl_libc.sh"],
@@ -22,17 +106,16 @@ load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
 # )
 
 copy_file(
-    name = "musl_libc",
-    src = "@zig-srcs//:musl_libc.static",
+    name = "musl_libc.a",
+    src = ":musl_libc.static",
     out = "libc.a",
     allow_symlink = True,
-    visibility = ["//visibility:public"],
 )
 
 copy_to_directory(
     name = "search_directory",
     srcs = [
-        ":musl_libc",
+        ":musl_libc.a",
     ],
     visibility = ["//visibility:public"],
 )

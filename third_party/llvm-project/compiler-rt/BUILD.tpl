@@ -282,6 +282,7 @@ cc_stage2_library(
 
 cc_stage2_library(
     name = "builtins",
+    includes = ["lib/builtins"],
     srcs = select({
         "@cc-toolchain//platforms/config:linux_x86_64": [":builtins_x86_64_sources"],
         "@cc-toolchain//platforms/config:linux_aarch64": [":builtins_aarch64_sources"],
@@ -290,7 +291,24 @@ cc_stage2_library(
         Platform not supported for compiler-rt.builtins.
         It is likely that we are just missing the filegroups for that platform.
         Please file an issue.
-    """),
+    """) + [
+        "lib/builtins/assembly.h",
+        "lib/builtins/fp_extend.h",
+        "lib/builtins/fp_lib.h",
+        "lib/builtins/fp_mode.h",
+        "lib/builtins/fp_trunc.h",
+        "lib/builtins/int_endianness.h",
+        "lib/builtins/int_lib.h",
+        "lib/builtins/int_math.h",
+        "lib/builtins/int_to_fp.h",
+        "lib/builtins/int_types.h",
+        "lib/builtins/int_util.h",
+    ] + select({
+        "@platforms//cpu:aarch64": [
+            "lib/builtins/cpu_model/aarch64.h",
+        ],
+        "//conditions:default": [],
+    }),
     copts = [
         "-fno-builtin",
         "-std=c11",
@@ -330,24 +348,6 @@ cc_stage2_library(
         ],
         "//conditions:default": [],
     }),
-    hdrs = [
-        "lib/builtins/assembly.h",
-        "lib/builtins/fp_extend.h",
-        "lib/builtins/fp_lib.h",
-        "lib/builtins/fp_mode.h",
-        "lib/builtins/fp_trunc.h",
-        "lib/builtins/int_endianness.h",
-        "lib/builtins/int_lib.h",
-        "lib/builtins/int_math.h",
-        "lib/builtins/int_to_fp.h",
-        "lib/builtins/int_types.h",
-        "lib/builtins/int_util.h",
-    ] + select({
-        "@platforms//cpu:aarch64": [
-            "lib/builtins/cpu_model/aarch64.h",
-        ],
-        "//conditions:default": [],
-    }),
     features = ["-default_compile_flags"],
     linkstatic = True,
     deps = select({
@@ -356,11 +356,21 @@ cc_stage2_library(
         ],
         "//conditions:default": [],
     }),
-    implementation_deps = [
-        "@zig-srcs//:linux_system_headers",
+    implementation_deps = select({
+        "@platforms//os:macos": [],
+        "@platforms//os:linux": [
+            "@zig-srcs//:linux_system_headers",
+        ],
+    }) + [
         "@zig-srcs//:posix_headers",
-        "@zig-srcs//:gnu-libc",
-    ],
+    ] + select({
+        "@cc-toolchain//constraints/libc:musl": [
+            "@musl_libc//:musl_libc_headers",
+        ],
+        "//conditions:default": [
+            "@zig-srcs//:gnu_libc_headers",
+        ],
+    }),
     visibility = ["//visibility:public"],
 )
 

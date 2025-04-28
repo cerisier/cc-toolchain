@@ -1,5 +1,5 @@
 load("@bazel_skylib//lib:selects.bzl", "selects")
-load("//constraints/libc:libc_versions.bzl", _libc_versions = "LIBCS")
+load("//constraints/libc:libc_versions.bzl", _libc_versions = "LIBCS", _glibc_versions = "GLIBCS")
 load("//platforms:common.bzl", _libc_supported_target = "LIBC_SUPPORTED_TARGETS")
 
 def declare_config_settings_libc_aware():
@@ -24,3 +24,10 @@ def declare_config_settings_libc_aware():
                     "//constraints/libc:{}".format(libc),
                 ],
             )
+
+    selects.config_setting_group(
+        name = "gnu",
+        match_any = [
+            "//constraints/libc:{}".format(libc) for libc in _glibc_versions
+        ],
+    )
