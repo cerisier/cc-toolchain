@@ -84,7 +84,7 @@ cc_args(
         #     .windows => target.abi.isGnu(),
         #     else => true,
         # };
-        "-l:{libunwind}",
+        "-l:{libunwind}", # only if libcxx on linux
         "-l:{libcxx}",
         "-l:{libcxxabi}",
         "-l:{libc_nonshared}",
@@ -147,18 +147,17 @@ cc_args(
     ],
 )
 
+#TODO: Factorize this and gnu
 cc_args(
     name = "linux_default_libs_musl",
     actions = [
         "@rules_cc//cc/toolchains/actions:link_actions",
     ],
     args = [
-        #TODO: Handle dynamic musl
-        "-static",
         "-L.", # needed to -l:bazel-out/...
         "-l:{Scrt1}",
         "-l:{compiler_rt_builtins}",
-        "-l:{libunwind}",
+        "-l:{libunwind}", # only if libcxx on linux
         "-l:{libcxx}",
         "-l:{libcxxabi}",
         # We need to support copts like -lc -ldl etc... 
@@ -177,7 +176,7 @@ cc_args(
         # "-ldl",
         # "-lrt",
         # "-lutil",
-        # "-Wl,--end-group",
+        "-Wl,--end-group",
     ],
     data = [
         "//libc/musl:musl_Scrt1",

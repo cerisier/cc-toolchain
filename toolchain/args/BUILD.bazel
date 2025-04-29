@@ -106,6 +106,16 @@ cc_args(
 )
 
 cc_args(
+    name = "static_link_executable",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+    ],
+    args = [
+        "-static",
+    ],
+)
+
+cc_args(
     name = "use_lld",
     actions = [
         "@rules_cc//cc/toolchains/actions:link_actions",
@@ -117,6 +127,7 @@ cc_args(
         # "--ld-path={lld_path}",
     ] + select({
         "@platforms//os:macos": [],
+        #TODO: Put those at the right place, they are applied too early
         "//conditions:default": [
             "-Wl,-no-as-needed",
             "-Wl,--build-id=md5",
